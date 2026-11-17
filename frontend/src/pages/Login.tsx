@@ -1,0 +1,32 @@
+import { FormEvent, useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
+
+export default function Login() {
+  const { login } = useAuth();
+  const nav = useNavigate();
+  const [err, setErr] = useState('');
+  const submit = async (e: FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    const f = new FormData(e.currentTarget);
+    try {
+      await login(f.get('username') as string, f.get('password') as string);
+      nav('/');
+    } catch (e: any) { setErr(e.message); }
+  };
+  return (
+    <div className="auth-box">
+      <h1>Masuk</h1>
+      <p className="muted">Gunakan username & password akun bimbel Anda.</p>
+      {err && <p style={{ color: '#dc2626' }}>{err}</p>}
+      <form onSubmit={submit}>
+        <label>Username</label>
+        <input name="username" required autoFocus />
+        <label>Password</label>
+        <input name="password" type="password" required />
+        <button style={{ width: '100%' }}>Masuk</button>
+      </form>
+      <p className="muted">Belum punya akun? <Link to="/register">Daftar bimbel</Link></p>
+    </div>
+  );
+}

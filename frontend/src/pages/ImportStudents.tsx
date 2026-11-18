@@ -1,5 +1,6 @@
 ﻿import { FormEvent, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
+import MemberForm, { MemberRole } from '../components/MemberForm';
 
 const MAX_FILE_SIZE = 5 * 1024 * 1024;
 type Feedback = { message: string; details: string[] };
@@ -34,6 +35,9 @@ export default function ImportStudents() {
   const [error, setError] = useState<Feedback | null>(null);
   const [result, setResult] = useState<ImportResult | null>(null);
   const [notice, setNotice] = useState('');
+  const [manualRole, setManualRole] = useState<MemberRole>('siswa');
+  const [manualFormVersion, setManualFormVersion] = useState(0);
+  const [manualNotice, setManualNotice] = useState('');
 
   const submit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -135,7 +139,30 @@ export default function ImportStudents() {
 
   return (
     <div style={{ maxWidth: 860 }}>
-      <h1>Impor Data Siswa</h1>
+      <h1>Impor Data</h1>
+      <section aria-labelledby="manual-import-title">
+        <h2 id="manual-import-title">Tambah data secara manual</h2>
+        <p>Admin dapat menambahkan data siswa atau guru satu per satu.</p>
+        <div className="directory-tabs" aria-label="Jenis data manual">
+          <button type="button" aria-pressed={manualRole === 'siswa'} onClick={() => {
+            setManualRole('siswa'); setManualNotice('');
+          }}>Siswa</button>
+          <button type="button" aria-pressed={manualRole === 'guru'} onClick={() => {
+            setManualRole('guru'); setManualNotice('');
+          }}>Guru</button>
+        </div>
+        {manualNotice && <p role="status">{manualNotice}</p>}
+        <MemberForm
+          key={`${manualRole}-${manualFormVersion}`}
+          role={manualRole}
+          onSaved={() => {
+            setManualNotice(`Data ${manualRole} berhasil ditambahkan.`);
+            setManualFormVersion(value => value + 1);
+          }}
+        />
+      </section>
+      <hr />
+      <h2>Impor banyak data siswa</h2>
       <p>Fitur khusus admin. Siswa dicocokkan hanya berdasarkan NIS: NIS yang sudah ada diperbarui, NIS baru ditambahkan.</p>
       <form onSubmit={submit} aria-busy={pending !== null}>
         <label htmlFor="students-file">File siswa</label>

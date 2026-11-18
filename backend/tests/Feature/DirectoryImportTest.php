@@ -131,7 +131,7 @@ class DirectoryImportTest extends TestCase
         for ($i = 0; $i < 23; $i++) $this->user('siswa', ['name' => 'Student '.$i, 'nis' => 'N'.$i, 'class_room' => 'X', 'is_bimbel' => $i !== 0]);
         $result = $this->getJson('/api/directory')->assertOk()->assertJsonPath('total', 23)->assertJsonPath('per_page', 20)->assertJsonCount(20, 'data');
         $keys = array_keys($result->json('data.0')); sort($keys);
-        $expected = ['id','name','username','nis','class_room','role','is_bimbel']; sort($expected);
+        $expected = ['id','name','username','email','phone','nis','class_room','role','is_bimbel']; sort($expected);
         $this->assertSame($expected, $keys);
         $this->getJson('/api/directory?page=2')->assertJsonCount(3, 'data');
         $this->getJson('/api/directory?enrollment=participants')->assertJsonPath('total', 22);
@@ -139,5 +139,60 @@ class DirectoryImportTest extends TestCase
         $this->getJson('/api/directory?role=guru')->assertJsonPath('total', 1);
         $this->getJson('/api/directory?role=admin&enrollment=invalid&page=0')->assertUnprocessable();
         $this->assertTrue($this->user('siswa')->refresh()->is_bimbel);
+    }
+
+    public function test_only_admin_can_create_or_update_directory_members(): void
+    {
+        $admin = $this->user('admin');
+        $teacher = $this->user('guru');
+        $student = $this->user('siswa', ['nis' => 'N-1']);
+        $oldPassword = $student->password;
+
+        Sanctum::actingAs($teacher);
+        $this->postJson('/api/directory', [
+            'role' => 'siswa', 'name' => 'New Student', 'username' => 'newstudent',
+            'nis' => 'N-2', 'password' => 'password123',
+        ])->assertForbidden();
+        $this->putJson('/api/directory/'.$student->id, [
+            'name' => 'Updated Student', 'username' => $student->username, 'nis' => 'N-1',
+        ])->assertForbidden();
+
+        Sanctum::actingAs($admin);
+        $this->putJson('/api/directory/'.$student->id, [
+            'name' => 'Updated Student', 'username' => $student->username, 'nis' => 'N-1',
+        ])->assertOk()->assertJsonPath('name', 'Updated Student');
+        $this->assertSame($oldPassword, $student->fresh()->password);
+
+        $created = $this->postJson('/api/directory', [
+            'role' => 'guru', 'name' => 'New Teacher', 'email' => 'teacher@example.test',
+            'username' => 'newteacher', 'password' => 'password123', 'phone' => '08123456789',
+        ])->assertCreated()->assertJsonMissingPath('password')
+            ->assertJsonMissingPath('nis')->assertJsonMissingPath('class_room')
+            ->assertJsonMissingPath('is_bimbel');
+        $this->assertSame(
+            ['id', 'name', 'email', 'username', 'phone', 'role'],
+            array_keys($created->json()),
+        );
+        $newTeacher = User::where('username', 'newteacher')->firstOrFail();
+        $teacherPassword = $newTeacher->password;
+        $this->assertTrue(Hash::check('password123', $teacherPassword));
+        $this->putJson('/api/directory/'.$newTeacher->id, [
+            'name' => 'Updated Teacher', 'email' => 'teacher@example.test',
+            'username' => 'newteacher', 'phone' => '08987654321',
+        ])->assertOk()->assertJsonPath('name', 'Updated Teacher')->assertJsonPath('phone', '08987654321');
+        $this->assertSame($teacherPassword, $newTeacher->fresh()->password);
+    }
+
+    public function test_teacher_directory_returns_only_teacher_directory_fields(): void
+    {
+        $this->user('guru', ['name' => 'Teacher', 'username' => 'teacher', 'email' => 'teacher@example.test', 'phone' => '08123']);
+        Sanctum::actingAs($this->user());
+
+        $result = $this->getJson('/api/directory?role=guru')->assertOk();
+        $keys = array_keys($result->json('data.0'));
+        sort($keys);
+        $expected = ['id', 'name', 'email', 'username', 'phone', 'role'];
+        sort($expected);
+        $this->assertSame($expected, $keys);
     }
 }

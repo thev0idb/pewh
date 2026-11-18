@@ -32,7 +32,7 @@ export default function Sidebar() {
       ['/', 'Dashboard'],
       ['/kelola', 'Kelola Soal & Ujian'],
       ['/direktori', 'Direktori Sekolah'],
-      ['/import', 'Import Data Siswa'],
+      ['/import', 'Import Data'],
       ['/kontak', 'Pesan'],
     ],
   };

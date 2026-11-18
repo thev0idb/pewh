@@ -1,15 +1,14 @@
 import { FormEvent, useEffect, useState } from 'react';
 import { api } from '../api';
+import MemberForm, { Member } from '../components/MemberForm';
+import { useAuth } from '../context/AuthContext';
 
-type Member = {
-  id: number; name: string; username: string; nis: string | null;
-  class_room: string | null; role: 'siswa' | 'guru'; is_bimbel: boolean;
-};
 type Page = { data: Member[]; current_page: number; last_page: number; total: number };
 type Role = 'siswa' | 'guru';
 type Enrollment = 'all' | 'participants' | 'nonparticipants';
 
 export default function Directory() {
+  const { user } = useAuth();
   const [role, setRole] = useState<Role>('siswa');
   const [enrollment, setEnrollment] = useState<Enrollment>('all');
   const [draft, setDraft] = useState('');
@@ -19,6 +18,7 @@ export default function Directory() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [retry, setRetry] = useState(0);
+  const [editingMember, setEditingMember] = useState<Member | null>(null);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -40,8 +40,15 @@ export default function Directory() {
   function changeRole(next: Role) {
     if (next === role) return;
     setRole(next);
+    setEditingMember(null);
     setPage(1);
     setLoading(true);
+  }
+
+  function memberSaved() {
+    setEditingMember(null);
+    setLoading(true);
+    setRetry(value => value + 1);
   }
   function submitSearch(event: FormEvent) {
     event.preventDefault();
@@ -52,7 +59,7 @@ export default function Directory() {
   return (
     <div className="directory-page">
       <h1>Direktori Sekolah</h1>
-      <p className="muted">Daftar siswa dan guru. Cari berdasarkan nama, username, NIS, atau kelas.</p>
+      <p className="muted">Daftar siswa dan guru. Admin dapat mengubah data anggota.</p>
       <div className="directory-tabs" aria-label="Jenis direktori">
         <button type="button" aria-pressed={role === 'siswa'} onClick={() => changeRole('siswa')}>Siswa</button>
         <button type="button" aria-pressed={role === 'guru'} onClick={() => changeRole('guru')}>Guru</button>
@@ -70,10 +77,20 @@ export default function Directory() {
         </>}
         <label htmlFor="directory-search">Cari {role}</label>
         <div className="directory-search">
-          <input id="directory-search" value={draft} maxLength={255} onChange={e => setDraft(e.target.value)} placeholder="Nama, username, NIS, atau kelas" />
+          <input id="directory-search" value={draft} maxLength={255} onChange={e => setDraft(e.target.value)}
+            placeholder={role === 'siswa' ? 'Nama, username, NIS, kelas, email, atau no. HP' : 'Nama, email, username, atau no. HP'} />
           <button type="submit">Cari</button>
         </div>
       </form>
+      {user?.role === 'admin' && editingMember && (
+        <MemberForm
+          key={editingMember.id}
+          role={role}
+          member={editingMember}
+          onSaved={memberSaved}
+          onCancel={() => setEditingMember(null)}
+        />
+      )}
       <section aria-label={`Daftar ${role}`} aria-busy={loading}>
         {loading && <p role="status">Memuat direktori…</p>}
         {!loading && error && <div role="alert" className="card">
@@ -85,10 +102,24 @@ export default function Directory() {
             <div className="directory-table-wrap">
               <table>
                 <caption className="muted">Daftar {role === 'siswa' ? 'siswa' : 'guru'}</caption>
-                <thead><tr><th scope="col">Nama</th><th scope="col">Username</th><th scope="col">NIS</th><th scope="col">Kelas</th>{role === 'siswa' && <th scope="col">Kepesertaan</th>}</tr></thead>
+                <thead><tr>
+                  <th scope="col">Nama</th>
+                  {role === 'guru' && <th scope="col">Email</th>}
+                  <th scope="col">Username</th>
+                  {role === 'guru' ? <th scope="col">No. HP</th> : <>
+                    <th scope="col">NIS</th><th scope="col">Kelas</th><th scope="col">Kepesertaan</th>
+                  </>}
+                  {user?.role === 'admin' && <th scope="col">Aksi</th>}
+                </tr></thead>
                 <tbody>{result.data.map(member => <tr key={member.id}>
-                  <td>{member.name}</td><td>{member.username}</td><td>{member.nis ?? '—'}</td><td>{member.class_room ?? '—'}</td>
-                  {role === 'siswa' && <td><span className={`badge ${member.is_bimbel ? 'directory-participant' : 'directory-nonparticipant'}`}>{member.is_bimbel ? 'Peserta bimbel' : 'Bukan peserta bimbel'}</span></td>}
+                  <td>{member.name}</td>
+                  {role === 'guru' && <td>{member.email ?? '—'}</td>}
+                  <td>{member.username}</td>
+                  {role === 'guru' ? <td>{member.phone ?? '—'}</td> : <>
+                    <td>{member.nis ?? '—'}</td><td>{member.class_room ?? '—'}</td>
+                    <td><span className={`badge ${member.is_bimbel ? 'directory-participant' : 'directory-nonparticipant'}`}>{member.is_bimbel ? 'Peserta bimbel' : 'Bukan peserta bimbel'}</span></td>
+                  </>}
+                  {user?.role === 'admin' && <td><button type="button" onClick={() => setEditingMember(member)}>Ubah</button></td>}
                 </tr>)}</tbody>
               </table>
             </div>}

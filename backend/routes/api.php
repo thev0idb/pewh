@@ -26,6 +26,8 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/messages', [MessageController::class, 'store']);
 
     Route::get('/directory', [\App\Http\Controllers\DirectoryController::class, 'index'])->middleware('role:guru,admin');
+    Route::post('/directory', [\App\Http\Controllers\DirectoryController::class, 'store'])->middleware('role:admin');
+    Route::put('/directory/{user}', [\App\Http\Controllers\DirectoryController::class, 'update'])->middleware('role:admin');
     Route::get('/import/students/template', [ImportController::class, 'template'])->middleware('role:admin');
 
     // Guru/Admin — kelola konten

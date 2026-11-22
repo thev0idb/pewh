@@ -23,14 +23,6 @@ Laravel is accessible, powerful, and provides tools required for large, robust a
 
 ## Database lokal dengan Laragon
 
-1. Jalankan MySQL dari Laragon dan buat database bernama `pweh` melalui phpMyAdmin atau MySQL.
-2. Salin `.env.example` menjadi `.env` jika file `.env` belum ada. Konfigurasi default memakai `127.0.0.1:3306`, user `root`, dan password kosong; sesuaikan jika konfigurasi MySQL Laragon Anda berbeda.
-3. Jalankan migrasi dari direktori `backend`:
-
-   ```bash
-   php artisan migrate
-   ```
-
 ## Learning Laravel
 
 Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.

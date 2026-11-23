@@ -14,6 +14,7 @@ import Contact from './pages/Contact';
 import ImportStudents from './pages/ImportStudents';
 import Manage from './pages/Manage';
 import Directory from './pages/Directory';
+import EssayReviews from './pages/EssayReviews';
 
 function Protected({ children, roles }: { children: JSX.Element; roles?: string[] }) {
   const { user, loading } = useAuth();
@@ -59,6 +60,7 @@ export default function App() {
         <Route path="/import" element={<Protected roles={['admin']}><ImportStudents /></Protected>} />
         <Route path="/kelola" element={<Protected roles={['guru', 'admin']}><Navigate to="/kelola/test" replace /></Protected>} />
         <Route path="/kelola/test" element={<Protected roles={['guru', 'admin']}><Manage section="test" /></Protected>} />
+        <Route path="/kelola/koreksi" element={<Protected roles={['guru', 'admin']}><EssayReviews /></Protected>} />
         <Route path="/kelola/cbt" element={<Protected roles={['guru', 'admin']}><Manage section="cbt" /></Protected>} />
         <Route path="*" element={<Navigate to="/" />} />
       </Routes>

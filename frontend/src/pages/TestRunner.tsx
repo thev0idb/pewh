@@ -74,7 +74,7 @@ export default function TestRunner() {
           <div className="card" key={a.question_id}>
             <h2>{i + 1}. {a.question.body}</h2>
             <p>Jawaban Anda: {a.answer || '-'}</p>
-            {a.question.type === 'pg' && <p>Kunci: <strong>{a.question.answer_key}</strong> ({a.is_correct == null ? 'Menunggu penilaian' : a.is_correct ? 'Benar' : 'Kurang tepat'})</p>}
+            {a.is_correct == null ? <p>Belum dinilai</p> : <p>Kunci: <strong>{a.question.answer_key}</strong> ({a.is_correct ? 'Benar' : 'Kurang tepat'})</p>}
             {a.question.review && <p className="muted">Ringkasan: {a.question.review}</p>}
           </div>
         ))}

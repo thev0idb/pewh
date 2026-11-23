@@ -11,6 +11,7 @@ type TestQuestionItem = {
   options: OptionsMap;
   answer_key: string;
   review: string;
+  shortAnswerKey: string;
   points: number;
 };
 
@@ -36,6 +37,7 @@ const newTestQuestion = (): TestQuestionItem => ({
   options: emptyOptions(),
   answer_key: 'A',
   review: '',
+  shortAnswerKey: '',
   points: 1,
 });
 
@@ -126,7 +128,7 @@ export default function Manage({ section }: { section: 'test' | 'cbt' }) {
           body: q.body,
           type: effectiveType,
           options: effectiveType === 'pg' ? q.options : null,
-          answer_key: effectiveType === 'pg' ? q.answer_key : null,
+          answer_key: effectiveType === 'pg' ? q.answer_key : q.shortAnswerKey.trim() || null,
           review: q.review.trim() || null,
           points: Number(q.points) || 1,
         };
@@ -378,6 +380,13 @@ export default function Manage({ section }: { section: 'test' | 'cbt' }) {
                   </>
                 )}
 
+                {effectiveType === 'essay' && (
+                  <label>Acuan koreksi guru (opsional)
+                    <input value={q.shortAnswerKey} maxLength={255}
+                      onChange={(e) => updateTestQuestion(idx, { shortAnswerKey: e.target.value })}
+                      placeholder="Contoh: 5" />
+                  </label>
+                )}
                 <label>Ringkasan jawaban / pembahasan (opsional)</label>
                 <input
                   value={q.review}
@@ -385,7 +394,7 @@ export default function Manage({ section }: { section: 'test' | 'cbt' }) {
                   placeholder="Ditampilkan setelah siswa selesai mengerjakan"
                 />
 
-                <label>Poin</label>
+                <label>Bobot soal (poin)</label>
                 <input
                   type="number"
                   min={1}

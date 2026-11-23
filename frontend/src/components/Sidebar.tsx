@@ -69,6 +69,7 @@ export default function Sidebar() {
               {manageExpanded && (
                 <div className="sidebar-subnav" id="manage-subnav">
                   <NavLink to="/kelola/test">Buat Test Bimbel</NavLink>
+                  <NavLink to="/kelola/koreksi">Koreksi Esai</NavLink>
                   <NavLink to="/kelola/cbt">Buat Ujian CBT</NavLink>
                 </div>
               )}

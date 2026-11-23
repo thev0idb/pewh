@@ -1,45 +1,70 @@
-import { FormEvent, useEffect, useState } from 'react';
-import { api, post } from '../api';
+import { FormEvent, useRef, useState } from 'react';
+import { post } from '../api';
+import { usePageData } from '../usePageData';
 import { useAuth } from '../context/AuthContext';
 
 // Siswa menghubungi guru bila tidak bisa bertemu langsung
 export default function Contact() {
   const { user } = useAuth();
-  const [teachers, setTeachers] = useState<any[]>([]);
-  const [messages, setMessages] = useState<any[]>([]);
+  type Person = { id: number; name: string };
+  type Message = { id: number; subject: string; body: string; from?: Person; to?: Person };
+  const teachers = usePageData<Person[]>(user?.role === 'siswa' ? '/teachers' : null);
+  const messages = usePageData<{ data: Message[] }>('/messages');
   const [msg, setMsg] = useState('');
-  useEffect(() => {
-    api('/teachers').then(setTeachers);
-    api('/messages').then((r) => setMessages(r.data));
-  }, []);
+  const busy = useRef(false);
+  const [sending, setSending] = useState(false);
 
   const send = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    const f = Object.fromEntries(new FormData(e.currentTarget).entries());
-    await post('/messages', f);
+    if (busy.current) return;
+    busy.current = true;
+    setSending(true);
+    setMsg('');
+    const form = e.currentTarget;
+    const f = Object.fromEntries(new FormData(form).entries());
+    try {
+      const message = await post('/messages', f);
+      const recipient = teachers.data?.find(t => String(t.id) === String(f.to_id));
+      messages.setData(previous => previous && ({ ...previous,
+        data: [{ ...message, from: user, to: recipient }, ...previous.data],
+      }));
+    } catch (error) {
+      setMsg(error instanceof Error ? error.message : 'Pesan gagal dikirim.');
+      return;
+    } finally {
+      busy.current = false;
+      setSending(false);
+    }
     setMsg('Pesan terkirim');
-    e.currentTarget.reset();
+    form.reset();
   };
 
   return (
     <div style={{ maxWidth: 640 }}>
-      <h1>Hubungi Guru</h1>
-      <p className="muted">Gunakan halaman ini bila tidak dapat bertemu guru secara langsung.</p>
+      <h1>{user?.role === 'siswa' ? 'Hubungi Guru' : 'Pesan Masuk'}</h1>
       {user?.role === 'siswa' && (
         <form onSubmit={send} className="card">
-          <label>Kepada guru</label>
-          <select name="to_id" required>
+          {teachers.failed && <p role="alert">Daftar guru gagal dimuat. <button type="button" onClick={teachers.retry}>Coba lagi</button></p>}
+          {!teachers.failed && !teachers.data && <p role="status">Memuat daftar guru…</p>}
+          {teachers.data?.length === 0 && <p>Belum ada guru yang dapat dihubungi.</p>}
+          <fieldset disabled={sending || !teachers.data?.length}>
+          <label htmlFor="Contact-to_id">Kepada guru</label>
+          <select id="Contact-to_id" name="to_id" required>
             <option value="">Pilih guru...</option>
-            {teachers.map((t) => <option key={t.id} value={t.id}>{t.name}</option>)}
+            {teachers.data?.map((t) => <option key={t.id} value={t.id}>{t.name}</option>)}
           </select>
-          <label>Subjek</label><input name="subject" required />
-          <label>Pesan</label><textarea name="body" rows={4} required />
-          <button>Kirim</button>
-          {msg && <p className="muted">{msg}</p>}
+          <label htmlFor="Contact-subject">Subjek</label><input id="Contact-subject" name="subject" required />
+          <label htmlFor="Contact-body">Pesan</label><textarea id="Contact-body" name="body" rows={4} required />
+          <button>{sending ? 'Mengirim…' : 'Kirim'}</button>
+          </fieldset>
+          {msg && <p role="status">{msg}</p>}
         </form>
       )}
       <h2>Riwayat Pesan</h2>
-      {messages.map((m) => (
+      {messages.failed && <p role="alert">Riwayat pesan gagal dimuat. <button onClick={messages.retry}>Coba lagi</button></p>}
+      {!messages.failed && !messages.data && <p role="status">Memuat riwayat pesan…</p>}
+      {messages.data?.data.length === 0 && <p>Belum ada pesan.</p>}
+      {messages.data?.data.map((m) => (
         <div className="card" key={m.id}>
           <strong>{m.subject}</strong>
           <p className="muted">{m.from?.name} → {m.to?.name}</p>

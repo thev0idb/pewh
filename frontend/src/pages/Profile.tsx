@@ -8,14 +8,21 @@ export default function Profile() {
   const [msg, setMsg] = useState('');
   const submit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    const data = Object.fromEntries(new FormData(e.currentTarget).entries());
-    Object.keys(data).forEach((k) => !data[k] && delete data[k]);
+    const form = e.currentTarget;
+    const data = Object.fromEntries(new FormData(form).entries());
+    if (!data.password && !data.password_confirmation) {
+      delete data.password;
+      delete data.password_confirmation;
+    }
     if (data.password && data.password !== data.password_confirmation) return setMsg('Konfirmasi password tidak sama');
     try {
       await put('/profile', data);
       await refresh();
       setMsg('Profil berhasil diperbarui');
-      e.currentTarget.reset();
+      for (const name of ['password', 'password_confirmation']) {
+        const field = form.elements.namedItem(name);
+        if (field instanceof HTMLInputElement) field.value = '';
+      }
     } catch (err: any) { setMsg(err.message); }
   };
   if (!user) return null;
@@ -24,14 +31,14 @@ export default function Profile() {
       <h1>Profil</h1>
       {msg && <p className="muted">{msg}</p>}
       <form onSubmit={submit}>
-        <label>Nama</label><input name="name" defaultValue={user.name} />
-        <label>Username</label><input name="username" defaultValue={user.username} />
-        <label>Email</label><input name="email" type="email" defaultValue={user.email ?? ''} />
-        <label>No. HP</label><input name="phone" defaultValue={user.phone ?? ''} />
-        <label>Password baru (kosongkan bila tidak diubah)</label>
-        <input name="password" type="password" />
-        <label>Konfirmasi password</label>
-        <input name="password_confirmation" type="password" />
+        <label htmlFor="Profile-name">Nama</label><input id="Profile-name" name="name" defaultValue={user.name} />
+        <label htmlFor="Profile-username">Username</label><input id="Profile-username" name="username" defaultValue={user.username} />
+        <label htmlFor="Profile-email">Email</label><input id="Profile-email" name="email" type="email" defaultValue={user.email ?? ''} />
+        <label htmlFor="Profile-phone">No. HP</label><input id="Profile-phone" name="phone" defaultValue={user.phone ?? ''} />
+        <label htmlFor="Profile-password">Password baru (kosongkan bila tidak diubah)</label>
+        <input id="Profile-password" name="password" type="password" />
+        <label htmlFor="Profile-password_confirmation">Konfirmasi password</label>
+        <input id="Profile-password_confirmation" name="password_confirmation" type="password" />
         <button>Simpan Perubahan</button>
       </form>
       <div className="card" style={{ marginTop: 16 }}>

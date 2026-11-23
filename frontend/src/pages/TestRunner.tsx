@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { api, post } from '../api';
+import { useAttemptAnswers } from '../useAttemptAnswers';
 import Timer from '../components/Timer';
 
 type Q = { id: number; body: string; type: 'essay' | 'pg'; options: Record<string, string> | null; points: number };
@@ -11,7 +12,7 @@ export default function TestRunner() {
   const nav = useNavigate();
   const [attemptId, setAttemptId] = useState<number>();
   const [questions, setQuestions] = useState<Q[]>([]);
-  const [answers, setAnswers] = useState<Record<number, string>>({});
+  const { answers, save: setAnswers, restore, clear } = useAttemptAnswers('test');
   const [duration, setDuration] = useState(0);
   const [result, setResult] = useState<Answer[] | null>(null);
   const [score, setScore] = useState<number | null>(null);
@@ -27,12 +28,13 @@ export default function TestRunner() {
       const tests: { id: number; duration_minutes: number }[] = await api('/tests');
       if (!active) return;
       const minutes = tests.find(test => String(test.id) === id)?.duration_minutes;
-      if (!minutes || !Number.isFinite(Number(minutes)) || minutes <= 0) {
-        throw new Error('Durasi tes tidak tersedia. Silakan kembali ke daftar tes.');
-      }
+      if (!minutes || minutes <= 0) throw new Error('Durasi tes tidak tersedia.');
       const r = await post(`/tests/${id}/start`);
       if (!active) return;
-      setDuration(r.attempt.duration_override ?? minutes * 60);
+      const started = Date.parse(r.attempt.started_at);
+      const seconds = r.attempt.duration_override ?? minutes * 60;
+      setDuration(Number.isFinite(started) ? Math.max(0, Math.ceil((started - Date.now()) / 1000 + seconds)) : seconds);
+      restore(r.attempt.id);
       setAttemptId(r.attempt.id);
       setQuestions(r.questions);
     }
@@ -48,7 +50,11 @@ export default function TestRunner() {
     try {
       const r = await post(`/attempts/${attemptId}/submit`, { answers });
       setScore(r.attempt?.score ?? r.score ?? null);
-      setResult(r.answers);
+      clear();
+      setResult(r.answers.map((a: Answer) => ({
+        ...a,
+        question: { ...questions.find(q => q.id === a.question_id), ...a.question },
+      })));
     } catch {
       submitting.current = false;
       setSending(false);
@@ -63,7 +69,7 @@ export default function TestRunner() {
     // Setiap akhir soal diberi ringkasan jawaban tepat (diisi guru)
     return (
       <div>
-        <h1>{score == null ? 'Tes telah dikumpulkan' : `Hasil Test — Skor ${score}`}</h1>
+        <h1>{score == null ? 'Tes dikumpulkan. Menunggu penilaian.' : `Hasil Test — Skor ${score}`}</h1>
         {result.map((a, i) => (
           <div className="card" key={a.question_id}>
             <h2>{i + 1}. {a.question.body}</h2>

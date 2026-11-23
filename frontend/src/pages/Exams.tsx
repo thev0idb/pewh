@@ -6,6 +6,11 @@ import { api } from '../api';
 export default function Exams() {
   const [exams, setExams] = useState<any[] | null>(null);
   const nav = useNavigate();
+  const [now, setNow] = useState(Date.now);
+  useEffect(() => {
+    const interval = window.setInterval(() => setNow(Date.now()), 1000);
+    return () => window.clearInterval(interval);
+  }, []);
   const [failed, setFailed] = useState(false);
   const [request, setRequest] = useState(0);
   useEffect(() => {
@@ -40,6 +45,8 @@ export default function Exams() {
           </p>
           {e.attempt?.status === 'submitted'
             ? <p>Selesai — Skor: <strong>{e.attempt.score ?? 'menunggu penilaian'}</strong></p>
+            : now < Date.parse(e.start_at) ? <p>Belum dimulai</p>
+            : now >= Date.parse(e.end_at) ? <p>Sudah berakhir</p>
             : <button onClick={() => nav(`/cbt/${e.id}`)}>Mulai Ujian</button>}
         </div>
       ))}

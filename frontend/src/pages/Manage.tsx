@@ -173,13 +173,17 @@ export default function Manage({ section }: { section: 'test' | 'cbt' }) {
 
   const removeSection = (index: number) => {
     if (sections.length <= 1) return;
+    if (examQuestions.some(q => q.section_index === index)) {
+      showNotice('error', 'Bagian ini masih berisi soal. Pindahkan soalnya sebelum menghapus bagian.');
+      return;
+    }
     const next = sections.filter((_, i) => i !== index);
     setSections(next);
     syncTotalDuration(next);
     setExamQuestions((prev) =>
       prev.map((q) => ({
         ...q,
-        section_index: Math.min(q.section_index, next.length - 1),
+        section_index: q.section_index > index ? q.section_index - 1 : q.section_index,
       }))
     );
   };

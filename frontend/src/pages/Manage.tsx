@@ -410,14 +410,14 @@ export default function Manage({ section }: { section: 'test' | 'cbt' }) {
       )}
 
       {section === 'cbt' && (
-      <div className="card">
+      <div className="card cbt-card">
         <h2>Buat Ujian CBT</h2>
         <p className="muted">
           Setiap bagian punya durasi sendiri (mis. Essay 30 menit, Pilihan Ganda 15 menit). Total
           durasi harus menampung semua bagian.
         </p>
 
-        <form onSubmit={createExam}>
+        <form className="cbt-form" onSubmit={createExam}>
           <label>Judul ujian</label>
           <input
             value={examTitle}
@@ -434,7 +434,7 @@ export default function Manage({ section }: { section: 'test' | 'cbt' }) {
             required
           />
 
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
+          <div className="cbt-schedule">
             <div>
               <label>Mulai</label>
               <input
@@ -477,7 +477,7 @@ export default function Manage({ section }: { section: 'test' | 'cbt' }) {
                 )}
               </div>
 
-              <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr', gap: 8 }}>
+              <div className="cbt-section-fields">
                 <div>
                   <label>Nama bagian</label>
                   <input
@@ -568,7 +568,7 @@ export default function Manage({ section }: { section: 'test' | 'cbt' }) {
 
                 {isPg && (
                   <>
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
+                    <div className="cbt-options">
                       {(['A', 'B', 'C', 'D'] as const).map((opt) => (
                         <div key={opt}>
                           <label>Opsi {opt}</label>
@@ -607,7 +607,7 @@ export default function Manage({ section }: { section: 'test' | 'cbt' }) {
             );
           })}
 
-          <div style={{ display: 'flex', gap: 8 }}>
+          <div className="cbt-actions">
             <button
               type="button"
               style={secondaryBtnStyle}

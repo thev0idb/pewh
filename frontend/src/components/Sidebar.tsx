@@ -9,6 +9,7 @@ export default function Sidebar() {
   const role = user?.role ?? 'siswa';
   const isManagePath = pathname.startsWith('/kelola');
   const [manageExpanded, setManageExpanded] = useState(isManagePath);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   useEffect(() => {
     if (isManagePath) setManageExpanded(true);
@@ -38,9 +39,20 @@ export default function Sidebar() {
   };
 
   return (
-    <aside className="sidebar">
-      <h2 style={{ padding: '0 12px', fontSize: 18 }}>Bimbel<span style={{ color: 'var(--accent)' }}>CBT</span></h2>
-      <nav>
+    <aside className={`sidebar${mobileMenuOpen ? " mobile-open" : ""}`}>
+      <div className="sidebar-heading">
+        <h2>MAN 2 Kota Tangerang</h2>
+        <button type="button" className="mobile-menu-toggle"
+          aria-expanded={mobileMenuOpen} aria-controls="sidebar-navigation"
+          onClick={() => setMobileMenuOpen(open => !open)}>
+          {mobileMenuOpen ? 'Tutup ×' : '☰ Menu'}
+        </button>
+      </div>
+      <nav id="sidebar-navigation" onClick={event => {
+        if (event.target instanceof Element && event.target.closest('a')) {
+          setMobileMenuOpen(false);
+        }
+      }}>
         {menus[role].map(([to, label]) => (
           to === '/kelola' ? (
             <div key={to}>

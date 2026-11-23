@@ -1,9 +1,11 @@
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 
 // Kunci ujian: fullscreen, blokir klik kanan, blur/tab-switch dihitung,
 // tombol pintas devtools dinonaktifkan, keluar halaman = auto submit.
 // Catatan: pembatasan penuh (mencegah task switch OS) hanya bisa lewat aplikasi kiosk/SEB.
 export function useExamLock(onViolation: () => void, onForceSubmit: () => void) {
+  const submitRef = useRef(onForceSubmit);
+  useEffect(() => { submitRef.current = onForceSubmit; }, [onForceSubmit]);
   useEffect(() => {
     const block = (e: Event) => e.preventDefault();
     const onKey = (e: KeyboardEvent) => {
@@ -15,7 +17,7 @@ export function useExamLock(onViolation: () => void, onForceSubmit: () => void) 
       }
     };
     const onVis = () => { if (document.hidden) onViolation(); };
-    const onLeave = (e: BeforeUnloadEvent) => { e.preventDefault(); onForceSubmit(); };
+    const onLeave = (e: BeforeUnloadEvent) => { e.preventDefault(); submitRef.current(); };
     const onContext = (e: MouseEvent) => { e.preventDefault(); onViolation(); };
 
     document.documentElement.requestFullscreen?.().catch(() => {});

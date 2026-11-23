@@ -1,5 +1,5 @@
 import { FormEvent, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 
 export default function Register() {
@@ -25,11 +25,12 @@ export default function Register() {
         <label htmlFor="auth-name">Nama lengkap</label><input id="auth-name" name="name" required />
         <label htmlFor="auth-username">Username</label><input id="auth-username" name="username" required />
         <label htmlFor="auth-email">Email</label><input id="auth-email" name="email" type="email" />
-        <label htmlFor="auth-phone">No. HP (untuk notifikasi WhatsApp)</label><input id="auth-phone" name="phone" />
+        <label htmlFor="auth-phone">No. HP (untuk notifikasi WhatsApp)</label><input id="auth-phone" name="phone" type="tel" autoComplete="tel" />
         <label htmlFor="auth-password">Password</label><input id="auth-password" name="password" type="password" required />
         <label htmlFor="auth-password_confirmation">Konfirmasi password</label><input id="auth-password_confirmation" name="password_confirmation" type="password" required />
         <button style={{ width: '100%' }}>Daftar</button>
       </form>
+      <p className="muted">Sudah punya akun? <Link to="/login">Masuk</Link></p>
       </main>
     </div>
   );

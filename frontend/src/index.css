@@ -354,3 +354,30 @@ th, td { text-align: left; padding: 10px; border-bottom: 1px solid var(--border)
     display: grid; grid-template-columns: 1fr; margin-top: 8px;
   }
 }
+
+.runner-heading, .runner-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+.runner-heading { justify-content: space-between; }
+.runner-heading h1, .answer-option, .profile-link { overflow-wrap: anywhere; }
+.answer-option {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 44px;
+  font-size: 16px;
+  color: var(--text);
+  cursor: pointer;
+}
+.answer-option input { flex: none; }
+.question-nav button[aria-current="step"] {
+  outline: 2px solid var(--text);
+  outline-offset: 1px;
+}
+.question-nav button:focus-visible { box-shadow: inset 0 0 0 3px #e9ae33; }
+@media (max-width: 720px) {
+  .question-nav button { width: 44px; height: 44px; }
+}

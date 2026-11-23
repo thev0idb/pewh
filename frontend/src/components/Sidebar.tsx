@@ -79,7 +79,7 @@ export default function Sidebar() {
         ))}
         <NavLink to="/login" onClick={logout}>Keluar</NavLink>
       </nav>
-      <NavLink to="/profil" className="profile-link">
+      <NavLink to="/profil" className="profile-link" onClick={() => setMobileMenuOpen(false)}>
         <div style={{ fontWeight: 600, fontSize: 14 }}>{user?.name}</div>
         <div className="muted">{role}</div>
       </NavLink>

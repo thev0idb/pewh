@@ -17,13 +17,20 @@ export default function ExamRunner() {
   const [answers, setAnswers] = useState<Record<number, string>>({});
   const [idx, setIdx] = useState(0);
   const [violations, setViolations] = useState(0);
+  const [submitError, setSubmitError] = useState('');
   const submittedRef = useRef(false);
 
   const doSubmit = async () => {
-    if (submittedRef.current) return;
+    if (!attemptId || submittedRef.current) return;
     submittedRef.current = true;
-    try { await post(`/exam-attempts/${attemptId}/submit`, { answers }); } catch {}
-    nav('/cbt');
+    setSubmitError('');
+    try {
+      await post(`/exam-attempts/${attemptId}/submit`, { answers });
+      nav('/cbt');
+    } catch {
+      submittedRef.current = false;
+      setSubmitError('Jawaban gagal dikirim. Periksa koneksi lalu coba lagi.');
+    }
   };
 
   useExamLock(() => setViolations((v) => v + 1), doSubmit);
@@ -37,12 +44,14 @@ export default function ExamRunner() {
     }).catch((e) => { alert(e.message); nav('/cbt'); });
   }, [id]);
 
+  if (!attemptId) return <p role="status">Memuat ujian...</p>;
+
   const q = questions[idx];
   const section = q ? sections.find((s) => s.id === q.section_id) : null;
 
   return (
     <div style={{ maxWidth: 860, margin: '0 auto', padding: 24 }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+      <div className="runner-heading">
         <h1>CBT {section ? `· ${section.label}` : ''}</h1>
         <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
           {violations > 0 && <span className="badge">Pelanggaran: {violations}</span>}
@@ -50,16 +59,17 @@ export default function ExamRunner() {
         </div>
       </div>
       <p className="muted">Jangan keluar dari halaman ini. Semua navigasi diblokir selama ujian.</p>
+      {submitError && <p role="alert">{submitError} <button onClick={doSubmit}>Kirim ulang</button></p>}
       <div className="question-nav">
         {questions.map((qq, i) => (
-          <button key={qq.id} className={answers[qq.id] ? 'answered' : ''} onClick={() => setIdx(i)}>{i + 1}</button>
+          <button key={qq.id} className={answers[qq.id] ? 'answered' : ''} aria-current={i === idx ? "step" : undefined} aria-label={`Soal ${i + 1}`} onClick={() => setIdx(i)}>{i + 1}</button>
         ))}
       </div>
       {q && (
         <div className="card">
           <h2>{idx + 1}. {q.body}</h2>
           {q.type === 'pg' && q.options && Object.entries(q.options).map(([k, v]) => (
-            <label key={k} style={{ display: 'flex', gap: 8, alignItems: 'center', cursor: 'pointer' }}>
+            <label key={k} className="answer-option">
               <input type="radio" name={`q${q.id}`} checked={answers[q.id] === k} onChange={() => setAnswers({ ...answers, [q.id]: k })} style={{ width: 'auto', margin: 0 }} />
               {k}. {v}
             </label>
@@ -67,7 +77,7 @@ export default function ExamRunner() {
           {q.type === 'essay' && (
             <textarea rows={6} value={answers[q.id] ?? ''} onChange={(e) => setAnswers({ ...answers, [q.id]: e.target.value })} />
           )}
-          <div style={{ display: 'flex', gap: 8 }}>
+          <div className="runner-actions">
             <button disabled={idx === 0} onClick={() => setIdx(idx - 1)}>Sebelumnya</button>
             {idx < questions.length - 1
               ? <button onClick={() => setIdx(idx + 1)}>Berikutnya</button>

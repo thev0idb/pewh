@@ -18,6 +18,7 @@ export default function TestRunner() {
   const [score, setScore] = useState<number | null>(null);
   const [startError, setStartError] = useState('');
   const submitting = useRef(false);
+  const [expired, setExpired] = useState(false);
   const [sending, setSending] = useState(false);
   const [submitError, setSubmitError] = useState('');
   const [idx, setIdx] = useState(0);
@@ -88,7 +89,7 @@ export default function TestRunner() {
     <div>
       <div className="runner-heading">
         <h1>Test Bimbel</h1>
-        <Timer seconds={duration} onExpire={submit} />
+        <Timer seconds={duration} onExpire={() => { setExpired(true); void submit(); }} />
       </div>
       {sending && <p role="status">Mengirim jawaban...</p>}
       {submitError && <p role="alert">{submitError} <button onClick={submit}>Kirim ulang</button></p>}
@@ -102,12 +103,12 @@ export default function TestRunner() {
           <h2>{idx + 1}. {q.body}</h2>
           {q.type === 'pg' && q.options && Object.entries(q.options).map(([k, v]) => (
             <label key={k} className="answer-option">
-              <input disabled={sending} type="radio" name={`q${q.id}`} checked={answers[q.id] === k} onChange={() => setAnswers({ ...answers, [q.id]: k })} style={{ width: 'auto', margin: 0 }} />
+              <input disabled={sending || expired} type="radio" name={`q${q.id}`} checked={answers[q.id] === k} onChange={() => setAnswers({ ...answers, [q.id]: k })} style={{ width: 'auto', margin: 0 }} />
               {k}. {v}
             </label>
           ))}
           {q.type === 'essay' && (
-            <textarea disabled={sending} rows={5} value={answers[q.id] ?? ''} onChange={(e) => setAnswers({ ...answers, [q.id]: e.target.value })} placeholder="Tulis jawaban Anda..." />
+            <textarea disabled={sending || expired} rows={5} value={answers[q.id] ?? ''} onChange={(e) => setAnswers({ ...answers, [q.id]: e.target.value })} placeholder="Tulis jawaban Anda..." />
           )}
           <div className="runner-actions">
             <button disabled={idx === 0} onClick={() => setIdx(idx - 1)}>Sebelumnya</button>

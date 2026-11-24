@@ -1,4 +1,4 @@
-import { Navigate, Route, Routes, useLocation } from 'react-router-dom';
+import { Navigate, Route, Routes, matchPath, useLocation } from 'react-router-dom';
 import Sidebar from './components/Sidebar';
 import { useAuth } from './context/AuthContext';
 import Login from './pages/Login';
@@ -18,7 +18,7 @@ import EssayReviews from './pages/EssayReviews';
 
 function Protected({ children, roles }: { children: JSX.Element; roles?: string[] }) {
   const { user, loading } = useAuth();
-  if (loading) return null;
+  if (loading) return <p role="status">Memeriksa sesi...</p>;
   if (!user) return <Navigate to="/login" replace />;
   if (roles && !roles.includes(user.role)) {
     return (
@@ -33,7 +33,8 @@ function Protected({ children, roles }: { children: JSX.Element; roles?: string[
 
 function Layout({ children }: { children: JSX.Element }) {
   const { pathname } = useLocation();
-  if (pathname === '/login' || pathname === '/register' || pathname.startsWith('/cbt/')) return children;
+  const { user } = useAuth();
+  if (!user || ['/login', '/register', '/cbt/:id'].some(path => matchPath(path, pathname))) return children;
   return (
     <div className="layout">
       <Sidebar />

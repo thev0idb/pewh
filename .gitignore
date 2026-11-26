@@ -1,0 +1,9 @@
+# Dependency & hasil build (dibuat ulang lewat npm install / npm run build)
+node_modules/
+frontend/dist/
+*.tsbuildinfo
+
+# Rahasia & file lokal
+.env
+.vscode/
+*.log

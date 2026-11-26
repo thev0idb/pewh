@@ -381,3 +381,39 @@ th, td { text-align: left; padding: 10px; border-bottom: 1px solid var(--border)
 @media (max-width: 720px) {
   .question-nav button { width: 44px; height: 44px; }
 }
+.man-card form > button { width: 100%; }
+
+/* ===== Link WhatsApp ===== */
+.wa-link { display: inline-flex; align-items: center; gap: 6px; color: #15803d; font-weight: 500; }
+.wa-link::before { content: ''; width: 8px; height: 8px; border-radius: 50%; background: #22c55e; }
+.contact-card { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; padding: 14px 18px; }
+.contact-card .wa-link { background: #22c55e; color: #fff; padding: 8px 14px; border-radius: 8px; }
+.contact-card .wa-link::before { background: #fff; }
+
+/* ===== Hasil siswa (guru) ===== */
+.link-button { background: transparent; color: var(--accent); padding: 4px 0; margin-bottom: 8px; }
+.button-secondary { background: #f3f4f6; color: var(--text); }
+.result-card { display: flex; flex-direction: column; gap: 12px; width: 100%; text-align: left; background: #fff; color: var(--text); }
+.result-card:hover { border-color: var(--accent); }
+.result-card-title { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+.result-stats { display: flex; flex-wrap: wrap; gap: 20px; }
+.result-stat { display: flex; flex-direction: column; min-width: 70px; }
+.result-stat b { font-size: 20px; }
+.result-stat small { color: var(--muted); font-size: 12px; }
+.result-stat.warn b { color: #b45309; }
+.result-filters { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; margin-bottom: 12px; }
+.result-filters select, .result-filters input { width: auto; flex: 1; min-width: 160px; margin: 0; }
+.result-pass { background: #dcfce7; color: #166534; }
+.result-fail { background: #fee2e2; color: #991b1b; }
+.result-pending { background: #fef3c7; color: #92400e; }
+.answer-card { border-left: 4px solid var(--border); }
+.answer-card.correct { border-left-color: #22c55e; }
+.answer-card.wrong { border-left-color: #ef4444; }
+.answer-card.pending { border-left-color: #f59e0b; }
+.answer-head { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+.answer-head .muted { margin-left: auto; }
+.answer-body, .answer-text { white-space: pre-wrap; overflow-wrap: anywhere; }
+.answer-options { list-style: none; padding: 0; margin: 0 0 12px; display: grid; gap: 4px; }
+.answer-options li { padding: 6px 10px; border-radius: 6px; border: 1px solid var(--border); }
+.answer-options li.key { background: #dcfce7; border-color: #86efac; }
+.answer-options li.chosen:not(.key) { background: #fee2e2; border-color: #fca5a5; }
